@@ -11,3 +11,5 @@ Route::apiResource('departemen', DepartemenController::class);
 Route::apiResource('jabatan', JabatanController::class);
 Route::apiResource('gaji', GajiController::class);
 Route::apiResource('absensi', AbsensiController::class);
+
+
