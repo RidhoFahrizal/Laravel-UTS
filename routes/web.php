@@ -37,6 +37,9 @@ Route::get('about', function(){
 
 });
 
+Route::get('home', function(){
+    return view('home', ['title' => 'Home']);
+});
 
 Route::get('blog', function(){
     return view('blog', ['title' => 'Blog']);

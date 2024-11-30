@@ -11,7 +11,10 @@
 </head>
 <body>
 <x-nav-bar></x-nav-bar>
-
 <x-header>{{$title}}</x-header>
+<main>
+    {{$slot}}
+</main>
+
 </body>
 </html>
