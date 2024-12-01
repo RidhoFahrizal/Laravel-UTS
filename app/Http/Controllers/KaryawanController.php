@@ -2,6 +2,12 @@
 
 namespace App\Http\Controllers;
 
+
+//CATATAN
+// CONTORLLER KARYAWAN BERDASARKAN PASSWORD SUDAH SELESAI
+
+
+
 use App\Models\Karyawan;
 use Illuminate\Http\Request;
 use App\Http\Resources\KaryawanResource;
@@ -27,39 +33,22 @@ class KaryawanController extends Controller
      */
     public function store(Request $request)
     {
-        //define validation rules
-        $validator = Validator::make($request->all(), [
-            'nama_lengkap' => 'required|string|max:100',
-            'email' => 'sometimes|string',
-            'nomor_telepon' => 'required|string|max:15',
+        $validated = $request->validate([
+            'nama_lengkap' => 'required|string',
+            'email' => 'required|email|unique:karyawans,email',
+            'nomor_telepon' => 'required|string',
             'tanggal_lahir' => 'required|date',
             'alamat' => 'required|string',
             'tanggal_masuk' => 'required|date',
-            'departemen_id' => 'sometimes|integer|exists:departemens,id',
-            'jabatan_id' => 'required|integer|exists:jabatans,id',
-            'status' => 'required|in:aktif,nonaktif',
+            'departemen_id' => 'required|exists:departemens,id',
+            'jabatan_id' => 'required|exists:jabatans,id',
+            'status' => 'required|string',
+            'password' => 'required|string|min:8',
         ]);
 
-        //check if validation fails
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+        $karyawan =Karyawan::create($validated);
 
-        //create post
-        $karyawan = Karyawan::create([
-            'nama_lengkap'     => $request->nama_lengkap,
-            'email'     => $request->email,
-            'nomor_telepon'   => $request->nomor_telepon,
-            'tanggal_lahir'   => $request->tanggal_lahir,
-            'alamat'   => $request->alamat,
-            'tanggal_masuk'   => $request->tanggal_masuk,
-            'departemen_id'   => $request->departemen_id,
-            'jabatan_id'      => $request->jabatan_id,
-            'status'          => $request->status
-        ]);
-
-        //return response
-        return new KaryawanResource(true, 'Data Karyawan Berhasil Ditambahkan!', $karyawan);
+        return new KaryawanResource(true, 'List of Departemens', $karyawan);
     }
     // Menampilkan detail karyawan
     public function show(Karyawan $karyawan)
@@ -75,39 +64,116 @@ class KaryawanController extends Controller
      * @param  mixed $id
      * @return void
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Karyawan $karyawan)
     {
-        //define validation rules
-        $validator = Validator::make($request->all(), [
-            'nama_lengkap' => 'sometimes|string|max:100',
-            'email' => 'sometimes|string|email|max:100|unique:karyawans,email',
-            'nomor_telepon' => 'sometimes|string|max:15',
-            'tanggal_lahir' => 'sometimes|date',
-            'alamat' => 'sometimes|string',
-            'tanggal_masuk' => 'sometimes|date',
-            'departemen_id' => 'sometimes|integer|exists:departemens,id',
-            'jabatan_id' => 'sometimes|integer|exists:jabatans,id',
-            'status' => 'sometimes|in:aktif,nonaktif',
+        $validated = $request->validate([
+            'nama_lengkap' => 'sometimes|required|string',
+            'email' => 'sometimes|required|email|unique:karyawans,email,' . $karyawan->id,
+            'nomor_telepon' => 'sometimes|required|string',
+            'tanggal_lahir' => 'sometimes|required|date',
+            'alamat' => 'sometimes|required|string',
+            'tanggal_masuk' => 'sometimes|required|date',
+            'departemen_id' => 'sometimes|required|exists:departemens,id',
+            'jabatan_id' => 'sometimes|required|exists:jabatans,id',
+            'status' => 'sometimes|required|string',
+            'password' => 'sometimes|required|string|min:8',
         ]);
 
-        //check if validation fails
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+        $karyawan->update($validated);
 
-        //find post by ID
-        $karyawan = karyawan::find($id);
-
-        // karyawan update
-        $karyawan->update($request->all());
-
-        //return response
-        return new KaryawanResource(true, 'Data Karyawan Berhasil Diubah!', $karyawan);
+        return response()->json(['message' => 'Karyawan berhasil diperbarui']);
     }
+
     // Menghapus karyawan
     public function destroy(Karyawan $karyawan)
     {
         $karyawan->delete();
         return new KaryawanResource(true, 'Karyawan Deleted Successfully', null);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   // KARYAWAN ABSEN DISINI
+
+    public function absen(Request $request)
+{
+    $validatedData = $request->validate([
+        'karyawan_id' => 'required|exists:karyawans,id',
+        'tanggal' => 'required|date',
+    ]);
+
+    $absensi = Absensi::where('karyawan_id', $validatedData['karyawan_id'])
+                      ->where('tanggal', $validatedData['tanggal'])
+                      ->first();
+
+    if (!$absensi) {
+        // Absen masuk
+        $absensi = Absensi::create([
+            'karyawan_id' => $validatedData['karyawan_id'],
+            'tanggal' => $validatedData['tanggal'],
+            'waktu_masuk' => now(),
+            'waktu_keluar' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil absen masuk.',
+            'data' => $absensi,
+        ]);
+    } else {
+        // Absen keluar
+        if ($absensi->waktu_keluar === $absensi->waktu_masuk) {
+            $absensi->update([
+                'waktu_keluar' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil absen keluar.',
+                'data' => $absensi,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda sudah absen keluar.',
+        ]);
+    }
+}
+
 }

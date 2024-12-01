@@ -1,19 +1,35 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Manager extends Model
+// MODEL MANAGER SUDAH MEMILIKI PASSWORD
+
+
+class Manager extends Authenticatable
 {
     use HasFactory;
 
-    protected $fillable = ['nama_lengkap', 'email', 'nomor_telepon', 'departemen_id'];
+    protected $fillable = [
+        'nama_lengkap',
+        'email',
+        'nomor_telepon',
+        'departemen_id',
+        'password', // Tambahkan ini
+    ];
 
-    // Relasi dengan tabel Departemen
-    public function departemen()
+    protected $hidden = [
+        'password',
+    ];
+
+    protected static function boot()
     {
-        return $this->belongsTo(Departemen::class, 'departemen_id');
+        parent::boot();
+        static::saving(function ($model) {
+            if ($model->isDirty('password')) {
+                $model->password = bcrypt($model->password);
+            }
+        });
     }
 }

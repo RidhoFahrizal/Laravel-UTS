@@ -1,12 +1,13 @@
 <?php
 // app/Models/Karyawan.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Karyawan extends Model
+//MODEL KARYAWAN SUDAH MEMILIKI PASSWORD
+
+class Karyawan extends Authenticatable
 {
     use HasFactory;
 
@@ -19,8 +20,21 @@ class Karyawan extends Model
         'tanggal_masuk',
         'departemen_id',
         'jabatan_id',
-        'status'
+        'status',
+        'password', // Tambahkan ini
     ];
 
+    protected $hidden = [
+        'password',
+    ];
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($model) {
+            if ($model->isDirty('password')) {
+                $model->password = bcrypt($model->password);
+            }
+        });
+    }
 }

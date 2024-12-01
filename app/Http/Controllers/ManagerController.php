@@ -1,15 +1,79 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
+
+//CONTROLLER MANAGER SUDAH BERSAMA PASSWORD (DONE)
+
+
+
 
 use App\Models\Absensi;
 use App\Models\Karyawan;
+use App\Models\Manager;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
+use App\Http\Resources\ManagerResource;
 class ManagerController extends Controller
 {
     // Melihat semua absensi di departemen manajer
+
+    public function index()
+    {
+        $managers = Manager::all();
+        return new ManagerResource(true, 'List of Managers', $managers);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_lengkap' => 'required|string',
+            'email' => 'required|email|unique:managers,email',
+            'nomor_telepon' => 'required|string',
+            'departemen_id' => 'required|exists:departemens,id',
+            'password' => 'required|string|min:8',
+        ]);
+
+        Manager::create($validated);
+
+        return response()->json(['message' => 'Manager berhasil ditambahkan'], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'nama_lengkap' => 'sometimes|required|string',
+            'email' => 'sometimes|required|email|unique:managers,email,' . $manager->id,
+            'nomor_telepon' => 'sometimes|required|string',
+            'departemen_id' => 'sometimes|required|exists:departemens,id',
+            'password' => 'sometimes|required|string|min:8',
+        ]);
+
+        $manager->update($validated);
+
+        return response()->json(['message' => 'Manager berhasil diperbarui']);
+
+}
+
+    public function destroy($id)
+    {
+    $manager = Manager::find($id);
+
+    if (!$manager) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Manager not found',
+        ], 404);
+    }
+
+    $manager->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Manager successfully deleted',
+    ]);
+}
+
+
     public function getAbsensi(Request $request)
     {
         $user = auth()->user();
@@ -98,4 +162,23 @@ class ManagerController extends Controller
             'data' => $absensi,
         ]);
     }
+
+    public function buatJadwalAbsensi(Request $request)
+{
+    $validatedData = $request->validate([
+        'departemen_id' => 'required|exists:departemens,id',
+        'tanggal' => 'required|date',
+        'jam_mulai' => 'required',
+        'jam_selesai' => 'required|after:jam_mulai',
+    ]);
+
+    $jadwal = JadwalAbsensi::create($validatedData);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Jadwal absensi berhasil dibuat.',
+        'data' => $jadwal,
+    ]);
+}
+
 }

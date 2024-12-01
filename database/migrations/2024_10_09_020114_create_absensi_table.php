@@ -11,18 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('absensis', function (Blueprint $table) {
+        Schema::create('absensi', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('karyawan_id');
             $table->date('tanggal');
-            $table->time('waktu_masuk')->default(DB::raw('CURRENT_TIME'))->nullable();
-            $table->time('waktu_keluar')->default(DB::raw('CURRENT_TIME'))->nullable();
-            $table->enum('status_absensi', ['hadir', 'izin', 'sakit', 'alpha']);
+            $table->time('waktu_masuk')->nullable();
+            $table->time('waktu_keluar')->nullable();
             $table->timestamps();
 
-            // Foreign key
             $table->foreign('karyawan_id')->references('id')->on('karyawans')->onDelete('cascade');
         });
+
     }
 
 
